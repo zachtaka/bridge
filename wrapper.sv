@@ -8,7 +8,7 @@ parameter AHB_DATA_WIDTH = 64;
 parameter AHB_ADDRESS_WIDTH = 32;
 parameter Hclock = 10;
 parameter GEN_RATE=100;
-
+parameter max_undefined_length=25;
 // Signal declarations
 wire HREADY;
 wire [AHB_ADDRESS_WIDTH-1:0] HADDR;
@@ -114,11 +114,12 @@ end
 
 
 
-			ahb_m #(
+		ahb_m #(
 			.AHB_DATA_WIDTH(AHB_DATA_WIDTH),
 			.AHB_ADDRESS_WIDTH(AHB_ADDRESS_WIDTH),
 			.Hclock(Hclock),
-			.GEN_RATE(GEN_RATE)
+			.GEN_RATE(GEN_RATE),
+			.max_undefined_length(max_undefined_length)
 		) inst_ahb_m (
 			.HCLK    (HCLK),
 			.HRESETn (HRESETn),
@@ -131,6 +132,7 @@ end
 			.HREADY  (HREADY),
 			.HRESP   (HRESP)
 		);
+
 
 
 

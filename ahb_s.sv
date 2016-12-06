@@ -81,14 +81,25 @@ end
 
 
 
+// HRESP encoding
+enum {ERROR,OKAY} response;
+always @(*) begin // #ask to htrans prepei na einai register?
+	if (response==OKAY) begin
+		HRESP=0;
+	end else if(response==ERROR) begin
+		HRESP=1'b1;
+	end 
+end
+
 ///////++++++++++++++++++++++
 ////// END OF - Encoding stuff
 ///////++++++++++++++++++++++
-
-
-
-
-
+integer slave_debug_file;
+integer clock_cycle_counter;
+initial begin 
+	slave_debug_file = $fopen("C:/Users/haris/Desktop/bridge/slave_debug_file.txt", "w") ;
+	clock_cycle_counter = 0;
+end
 
 always @(posedge HCLK ) begin
 	HREADY<=1'b1;
@@ -99,20 +110,64 @@ always @(posedge HCLK ) begin
 			HREADY<=1'b1; 
 		end
 	end
-
 	HRESP<=0; // hresp==OKAY
 end
 
 
-// HRESP encoding
-enum {ERROR,OKAY} response;
-always @(*) begin // #ask to htrans prepei na einai register?
-	if (response==OKAY) begin
-		HRESP=0;
-	end else if(response==ERROR) begin
-		HRESP=1'b1;
-	end 
+
+
+
+reg [AHB_ADDRESS_WIDTH-1:0] start_address;
+reg [AHB_ADDRESS_WIDTH-1:0] aligned_address;
+integer number_bytes,upper_byte_lane,lower_byte_lane,data_bus_bytes;
+reg [AHB_DATA_WIDTH-1:0] data;
+reg [7:0] tmp0;
+
+assign data_bus_bytes = AHB_DATA_WIDTH/8 ;
+
+always @(*)begin 
+	number_bytes = 2**HSIZE;
+	aligned_address =(HADDR/number_bytes)*number_bytes ;
+	if(state==NONSEQ) begin
+		lower_byte_lane = (HADDR-(HADDR/data_bus_bytes)*data_bus_bytes);
+		upper_byte_lane = ( aligned_address+(number_bytes-1)-(HADDR/data_bus_bytes)*data_bus_bytes);
+	end else begin 
+		lower_byte_lane=HADDR-(HADDR/data_bus_bytes)*data_bus_bytes;
+		upper_byte_lane=lower_byte_lane+number_bytes-1;
+	end
 end
+
+always @(posedge HCLK ) begin
+	clock_cycle_counter<=clock_cycle_counter+1;
+	// If READ send DATA
+	if(HWRITE==0 && state!==BUSY) begin // if READ
+		$fwrite(slave_debug_file,"@clock_cycle_counter=%d \tHADDR=%h \tHSIZE=%0d \taligned_address=%h \tnumber_bytes=%0d \tlower_byte_lane=%0d \tupper_byte_lane=%h \n",clock_cycle_counter,HADDR,HSIZE,aligned_address,number_bytes,lower_byte_lane,upper_byte_lane);
+		for (int i=0;i<=AHB_DATA_WIDTH;i=i+8)begin
+			if ((i>=lower_byte_lane*8) && (i<=upper_byte_lane*8)) begin //if i >= lower_byte_lane && i<=upper_byte_lane //((i>=start_address-(start_address/(AHB_DATA_WIDTH/8))*(AHB_DATA_WIDTH/8)) && ( i<=(start_address - start_address%(AHB_DATA_WIDTH/8) + (2**HSIZE-1) - (start_address/(AHB_DATA_WIDTH/8))*(AHB_DATA_WIDTH/8) ) ) )
+				HRDATA[i+:8]<=tmp0;
+			end else begin
+				HRDATA[i+:8]<='bx;
+			end
+
+			tmp0=tmp0+1;
+		end
+
+	end else begin 
+		HRDATA<='bx;
+		if(state==BUSY) begin
+			tmp0=tmp0;
+		end else begin 
+			tmp0=0;
+		end
+	end
+
+
+	if(state==NONSEQ) begin
+		tmp0=0;
+	end
+end
+
+
 
 
 

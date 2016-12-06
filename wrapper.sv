@@ -125,6 +125,7 @@ end
 			.HRESETn (HRESETn),
 			.HADDR   (HADDR),
 			.HWDATA  (HWDATA),
+			.HRDATA  (HRDATA),
 			.HWRITE  (HWRITE),
 			.HSIZE   (HSIZE),
 			.HBURST  (HBURST),
@@ -132,6 +133,7 @@ end
 			.HREADY  (HREADY),
 			.HRESP   (HRESP)
 		);
+
 
 
 

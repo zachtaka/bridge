@@ -1,4 +1,4 @@
-module ahb_m (HCLK,HRESETn,HADDR,HWDATA,HWRITE,HSIZE,HBURST,HTRANS,HREADY,HRESP); // HREADY pros to paron vgazw to hready apo porta
+module ahb_m (HCLK,HRESETn,HADDR,HWDATA,HRDATA,HWRITE,HSIZE,HBURST,HTRANS,HREADY,HRESP); // HREADY pros to paron vgazw to hready apo porta
 
 // Parameter declarations
 parameter AHB_DATA_WIDTH = 64;
@@ -11,6 +11,7 @@ parameter max_undefined_length = 25;
 // Port declarations
 // input ports
 input wire HREADY,HRESP;
+input wire [AHB_DATA_WIDTH-1:0] HRDATA;
 // output ports
 output reg [AHB_ADDRESS_WIDTH-1:0] HADDR;
 output reg [AHB_DATA_WIDTH-1:0] HWDATA;
@@ -105,7 +106,7 @@ end
 
 
 reg [8:0] cycle_counter;
-integer trans_random_var,gen_random_var,size_random_var;
+integer trans_random_var,gen_random_var,size_random_var,write_random_var;
 integer file,debug_file;
 integer local_cycle_counter;
 integer number_bytes,upper_byte_lane,lower_byte_lane;
@@ -121,93 +122,79 @@ initial begin
 	HRESETn=1'b1;
 	cycle_counter=0;
 	local_cycle_counter=0;
-	// while (1) begin
-	// 	gen_random_var = $urandom_range(100,0);
-	// 	trans_random_var = $urandom_range(3,0);
-	// 	if (gen_random_var<GEN_RATE) begin
-	// 		if (trans_random_var==0) begin
-	// 			INCR_t(4,$urandom_range(0,10));
-	// 		end else if (trans_random_var==1) begin
-	// 			INCR_t(8,$urandom_range(0,10));
-	// 		end else if (trans_random_var==2) begin
-	// 			INCR_t(16,$urandom_range(0,10));
-	// 		end else if (trans_random_var==3) begin
-	// 			SINGLE_t($urandom_range(0,10));
-	// 		end
-	// 	end else begin
-	// 		IDLE_t;
-	// 	end
-	// end
+	
 
 	while (1) begin
 		gen_random_var = $urandom_range(0,100);
 		trans_random_var = $urandom_range(0,4);
 		size_random_var = $urandom_range(0,3);
-
+		write_random_var = $urandom_range(0,1);
 		if (gen_random_var<GEN_RATE) begin
 			if (trans_random_var==0) begin // INCR4
 				if (size_random_var==0) begin // size=1 byte
-					INCR_t(4,$urandom_range(0,10),1);
+					INCR_t(4,$urandom_range(0,10),1,write_random_var);
 				end else if (size_random_var==1) begin // size=2 bytes
-					INCR_t(4,$urandom_range(0,10),2);
+					INCR_t(4,$urandom_range(0,10),2,write_random_var);
 				end else if (size_random_var==2) begin // size=4 bytes
-					INCR_t(4,$urandom_range(0,10),4);
+					INCR_t(4,$urandom_range(0,10),4,write_random_var);
 				end else if (size_random_var==3) begin // size=8 bytes
-					INCR_t(4,$urandom_range(0,10),8);
+					INCR_t(4,$urandom_range(0,10),8,write_random_var);
 				end
 			end else if (trans_random_var==1) begin // INCR8
 				if (size_random_var==0) begin // size=1 byte
-					INCR_t(8,$urandom_range(0,10),1);
+					INCR_t(8,$urandom_range(0,10),1,write_random_var);
 				end else if (size_random_var==1) begin // size=2 bytes
-					INCR_t(8,$urandom_range(0,10),2);
+					INCR_t(8,$urandom_range(0,10),2,write_random_var);
 				end else if (size_random_var==2) begin // size=4 bytes
-					INCR_t(8,$urandom_range(0,10),4);
+					INCR_t(8,$urandom_range(0,10),4,write_random_var);
 				end else if (size_random_var==3) begin // size=8 bytes
-					INCR_t(8,$urandom_range(0,10),8);
+					INCR_t(8,$urandom_range(0,10),8,write_random_var);
 				end
 			end else if (trans_random_var==2) begin // INCR16
 				if (size_random_var==0) begin // size=1 byte
-					INCR_t(16,$urandom_range(0,10),1);
+					INCR_t(16,$urandom_range(0,10),1,write_random_var);
 				end else if (size_random_var==1) begin // size=2 bytes
-					INCR_t(16,$urandom_range(0,10),2);
+					INCR_t(16,$urandom_range(0,10),2,write_random_var);
 				end else if (size_random_var==2) begin // size=4 bytes
-					INCR_t(16,$urandom_range(0,10),4);
+					INCR_t(16,$urandom_range(0,10),4,write_random_var);
 				end else if (size_random_var==3) begin // size=8 bytes
-					INCR_t(16,$urandom_range(0,10),8);
+					INCR_t(16,$urandom_range(0,10),8,write_random_var);
 				end
 			end else if (trans_random_var==3) begin // SINGLE
 				if (size_random_var==0) begin // size=1 byte
-					SINGLE_t($urandom_range(0,10),1);
+					SINGLE_t($urandom_range(0,10),1,write_random_var);
 				end else if (size_random_var==1) begin // size=2 bytes
-					SINGLE_t($urandom_range(0,10),2);
+					SINGLE_t($urandom_range(0,10),2,write_random_var);
 				end else if (size_random_var==2) begin // size=4 bytes
-					SINGLE_t($urandom_range(0,10),4);
+					SINGLE_t($urandom_range(0,10),4,write_random_var);
 				end else if (size_random_var==3) begin // size=8 bytes
-					SINGLE_t($urandom_range(0,10),8);
+					SINGLE_t($urandom_range(0,10),8,write_random_var);
 				end
 			end else if (trans_random_var==4) begin //INCR
 				if (size_random_var==0) begin // size=1 byte
-					INCR_t($urandom_range(max_undefined_length,17),$urandom_range(0,10),1);
+					INCR_t($urandom_range(max_undefined_length,17),$urandom_range(0,10),1,write_random_var);
 				end else if (size_random_var==1) begin // size=2 bytes
-					INCR_t($urandom_range(max_undefined_length,17),$urandom_range(0,10),2);
+					INCR_t($urandom_range(max_undefined_length,17),$urandom_range(0,10),2,write_random_var);
 				end else if (size_random_var==2) begin // size=4 bytes
-					INCR_t($urandom_range(max_undefined_length,17),$urandom_range(0,10),4);
+					INCR_t($urandom_range(max_undefined_length,17),$urandom_range(0,10),4,write_random_var);
 				end else if (size_random_var==3) begin // size=8 bytes
-					INCR_t($urandom_range(max_undefined_length,17),$urandom_range(0,10),8);
+					INCR_t($urandom_range(max_undefined_length,17),$urandom_range(0,10),8,write_random_var);
 				end
 			end
 		end else begin
 			IDLE_t;
 		end
 	end
+	//write_random_var = $urandom_range(0,1);
 	// IDLE_t;
-	// INCR_t(8,'h0,4);
-	// INCR_t(4,'h1,4);
-	// // INCR_t(4,'h2,4);
-	// // INCR_t(4,'h3,4);
-	// // INCR_t(4,'h4,4);
-	// // INCR_t(4,'h0,4);
-	INCR_t(25,'h0,4);
+	//
+	// INCR_t(8,'h0,4,write_random_var);
+	// INCR_t(4,'h1,4,write_random_var);
+	// INCR_t(4,'h2,4,write_random_var);
+	// INCR_t(4,'h3,4,write_random_var);
+	// INCR_t(4,'h4,4,write_random_var);
+	// INCR_t(4,'h0,4,write_random_var);
+	// INCR_t(4,'h1,4,0);
 	IDLE_t;
 end
 // clock generator
@@ -215,20 +202,25 @@ always #(Hclock/2) HCLK= ~HCLK;
 
 always @(posedge HCLK) begin
 	cycle_counter<=cycle_counter+1;
-	if (state==BUSY) begin
-		HWDATA<=data_buffer;
-	end else if (HREADY==1'b1) begin
-		HWDATA<=data;
+	if (HWRITE==1) begin
+		if (state==BUSY) begin
+			HWDATA<=data_buffer;
+		end else if (HREADY==1'b1) begin
+			HWDATA<=data;
+		end else begin
+			HWDATA<=HWDATA;
+		end
 	end else begin
-		HWDATA<=HWDATA;
+		HWDATA<='bx;
 	end
+
 	
 
 	if (state==NONSEQ) begin
 		$fwrite(file,"\n");
 	end
 	//$fwrite(file,"@cycle_counter=%0d \tHTRANS=%s \tHADDR=%h \tHWRITE=%h \tHBURST=%s \tHSIZE=%s \tHWDATA=%h data=%h\tHREADY=%b \t@local_cycle_counter=%0d put_write_data=%b\n",cycle_counter,state,HADDR,HWRITE,burst_type,size,HWDATA,data,HREADY,local_cycle_counter,put_write_data);
-	$fwrite(file,"@cycle_counter=%0d \tHTRANS=%s \tHBURST=%s \tHSIZE=%s \tburst_length=%0d \tHWRITE=%h \tHADDR=%h \tHWDATA=%h \tHREADY=%b \tHRESP=%s \tdata=%h \tdata_buffer=%h \t@local_cycle_counter=%0d \n",cycle_counter,state,burst_type,size,burst_length,HWRITE,HADDR,HWDATA,HREADY,response,data,data_buffer,local_cycle_counter);
+	$fwrite(file,"@cycle_counter=%0d \tHTRANS=%s \tHBURST=%s \tHSIZE=%s \tburst_length=%0d \tHWRITE=%h \tHADDR=%h \tHWDATA=%h \tHRDATA=%h \tHREADY=%b \tHRESP=%s \tdata=%h \tdata_buffer=%h \t@local_cycle_counter=%0d \n",cycle_counter,state,burst_type,size,burst_length,HWRITE,HADDR,HWDATA,HRDATA,HREADY,response,data,data_buffer,local_cycle_counter);
 
 
 end
@@ -247,6 +239,7 @@ task INCR_t;
 input integer number_of_beats;
 input [AHB_ADDRESS_WIDTH-1:0] start_address;
 input integer size_in_bytes;
+input write_random_var;
 reg [7:0] tmp0;
 reg  [AHB_ADDRESS_WIDTH-1:0] aligned_address,next_address;
 assign number_bytes = size_in_bytes;
@@ -295,7 +288,7 @@ assign aligned_address = (start_address/number_bytes)*number_bytes;
 				if (local_cycle_counter==0) begin
 					state<=NONSEQ;
 				end else begin
-					if (local_cycle_counter!==number_of_beats-1 && $urandom_range(0,100)<10) begin // na min mporei an emfanisei busy ston teleutaio kyklo gt tote paei stin epomeni entoli apo ton counter, kai etsi dn ginetai to teleutaio transfer tou burst
+					if (local_cycle_counter<number_of_beats-2 && $urandom_range(0,100)<10) begin // na min mporei an emfanisei busy ston teleutaio kyklo gt tote paei stin epomeni entoli apo ton counter, kai etsi dn ginetai to teleutaio transfer tou burst
 						state<=BUSY;
 					end else begin
 						state<=SEQ;
@@ -303,7 +296,7 @@ assign aligned_address = (start_address/number_bytes)*number_bytes;
 				end 
 				//size<=Halfword;
 
-				HWRITE<=1'b1;
+				HWRITE<=write_random_var;
 				if (local_cycle_counter>0) begin
 					next_address = aligned_address+(local_cycle_counter)*number_bytes;
 					HADDR<=next_address; 
@@ -381,6 +374,7 @@ endtask
 task SINGLE_t;
 input [AHB_ADDRESS_WIDTH-1:0] start_address;
 input integer size_in_bytes;
+input write_random_var;
 reg  [AHB_ADDRESS_WIDTH-1:0] aligned_address;
 assign number_bytes = size_in_bytes;
 assign aligned_address = (start_address/number_bytes)*number_bytes;
@@ -402,7 +396,7 @@ assign aligned_address = (start_address/number_bytes)*number_bytes;
 			size<=Doubleword;
 		end
 		state<=NONSEQ;
-		HWRITE<=1'b1;
+		HWRITE<=write_random_var;
 		HADDR<=start_address;
 		for (int i=0;i<AHB_DATA_WIDTH;i=i+8)begin
 			lower_byte_lane = (start_address-(start_address/data_bus_bytes)*data_bus_bytes);

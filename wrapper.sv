@@ -10,106 +10,41 @@ parameter Hclock = 10;
 parameter GEN_RATE=100;
 parameter max_undefined_length=25;
 // Signal declarations
-wire HREADY;
-wire [AHB_ADDRESS_WIDTH-1:0] HADDR;
-wire [AHB_DATA_WIDTH-1:0] HWDATA,HRDATA;
-wire HWRITE;
-wire [2:0] HSIZE,HBURST;
-wire [1:0] HTRANS;
-wire HCLK,HRESETn;
+logic HREADY;
+logic [AHB_ADDRESS_WIDTH-1:0] HADDR;
+logic [AHB_DATA_WIDTH-1:0] HWDATA,HRDATA;
+logic HWRITE;
+logic [2:0] HSIZE,HBURST;
+logic [1:0] HTRANS;
+logic HCLK,HRESETn;
+logic [63:0] debug_file;
+logic [63:0] cycle_counter;
 
-
-integer debug_file;
-integer cycle_counter;
-
-
-
-//////////////////////////////////////////
-////// Encoding stuff
-//////////////////////////////////////////
-
-// state encoding
-enum {IDLE,BUSY,NONSEQ,SEQ} state;
-always @(*) begin // #ask to htrans prepei na einai register?
-	if (HTRANS==2'b00) begin
-		state=IDLE;
-	end else if(HTRANS==2'b01) begin
-		state=BUSY;
-	end else if (HTRANS==2'b10) begin
-		state=NONSEQ;
-	end else if (HTRANS==2'b11) begin
-		state=SEQ;
-	end 
-end
-// burst encoding
-enum {SINGLE,INCR,INCR4,INCR8,INCR16,WRAP4,WRAP8,WRAP16} burst_type;
-always @(*) begin // #ask to htrans prepei na einai register?
-	if (HBURST==3'b000) begin
-		burst_type=SINGLE;
-	end else if(HBURST==3'b001) begin
-		burst_type=INCR;
-	end else if (HBURST==3'b010) begin
-		burst_type=WRAP4;
-	end else if (HBURST==3'b011) begin
-		burst_type=INCR4;
-	end else if (HBURST==3'b100) begin
-		burst_type=WRAP8;
-	end else if (HBURST==3'b101) begin
-		burst_type=INCR8;
-	end else if (HBURST==3'b110) begin
-		burst_type=WRAP16;
-	end else if (HBURST==3'b111) begin
-		burst_type=INCR16;
-	end 
-end
-// size encoding
-enum {Byte,Halfword,Word,Doubleword,Fourword,Eightword} size;
-always @(*) begin // #ask to htrans prepei na einai register?
-	if (HSIZE==3'b000) begin
-		size=Byte;
-	end else if(HSIZE==3'b001) begin
-		size=Halfword;
-	end else if (HSIZE==3'b010) begin
-		size=Word;
-	end else if (HSIZE==3'b011) begin
-		size=Doubleword;
-	end else if (HSIZE==3'b100) begin
-		size=Fourword;
-	end else if (HSIZE==3'b101) begin
-		size=Eightword;
-	end 
-end
-
-
-
-///////++++++++++++++++++++++
-////// END OF - Encoding stuff
-///////++++++++++++++++++++++
-
-
-
-
-
+// 1. 'logic' only (no reg, no wire)[done]
+// 2. parameters/I/O @ the interface [done]
+// 3. SV tasks
+// 4. NO multiple drivers
+// 5. AHB package [done]
 
 
 
 
 initial begin
-	debug_file = $fopen("C:/Users/haris/Desktop/bridge/debug_file.txt", "w") ;
+	//debug_file = $fopen("C:/Users/haris/Desktop/bridge/debug_file.txt", "w") ;
 	cycle_counter=0;
 end
 
 
 always @(posedge HCLK) begin
 	cycle_counter<=cycle_counter+1;
-	if (HTRANS==2'b10) begin //htrans == NONSEQ
-		$fwrite(debug_file,"\n");
-	end
-	$fwrite(debug_file,"@cycle_counter=%0d \tHTRANS=%s \tHADDR=%h \tHWRITE=%h \tHBURST=%s \tHSIZE=%s \tHWDATA=%h \tHREADY=%b\n",cycle_counter,state,HADDR,HWRITE,burst_type,size,HWDATA,HREADY);
+	// if (HTRANS==2'b10) begin //htrans == NONSEQ
+	// 	$fwrite(debug_file,"\n");
+	// end
+	// $fwrite(debug_file,"@cycle_counter=%0d \tHTRANS=%s \tHADDR=%h \tHWRITE=%h \tHBURST=%s \tHSIZE=%s \tHWDATA=%h \tHREADY=%b\n",cycle_counter,state,HADDR,HWRITE,burst_type,size,HWDATA,HREADY);
 
 end
 always @(posedge (HTRANS==2'b00) ) begin
-	$fwrite(debug_file,"\n");
+	// $fwrite(debug_file,"\n");
 end
 
 
@@ -162,7 +97,3 @@ end
 			.HRESP   (HRESP),
 			.HEXOKAY (HEXOKAY)
 		);
-
-
-
-endmodule
